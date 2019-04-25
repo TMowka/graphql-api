@@ -2,10 +2,11 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const graphqlHttp = require('express-graphql');
 const { buildSchema } = require('graphql');
+const mongoose = require('mongoose');
+
+const Event = require('./models/event');
 
 const app = express();
-
-const EVENTS = [];
 
 app.use(bodyParser.json());
 
@@ -42,24 +43,32 @@ app.use(
       }
     `),
     rootValue: {
-      events: () => {
-        return EVENTS;
+      events: async () => {
+        const result = await Event.find();
+
+        return result.map(res => res._doc);
       },
-      createEvent: ({ eventInput: { title, description, price } }) => {
-        const event = {
-          _id: Math.random().toString(),
+      createEvent: async ({ eventInput: { title, description, price, date } }) => {
+        const event = new Event({
           title,
           description,
           price: parseFloat(price, 10),
-          date: new Date().toISOString(),
-        };
-        EVENTS.push(event);
+          date: new Date(date),
+        });
 
-        return event;
+        const result = await event.save();
+
+        return result._doc;
       },
     },
     graphiql: true,
   }),
 );
 
-app.listen(5000);
+mongoose.connect(`mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0-bnbzo.mongodb.net/${process.env.MONGO_DB}?retryWrites=true`, { useNewUrlParser: true })
+  .then(() => {
+    app.listen(5000);
+  })
+  .catch((error) => {
+    console.error('An error occurred while connecting to mongoDB', error);
+  });
