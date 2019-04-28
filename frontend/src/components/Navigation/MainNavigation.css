@@ -8,6 +8,7 @@
   padding: 0 1rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
 .main-navigation__logo h1 {
@@ -16,7 +17,7 @@
 }
 
 .main-navigation__items {
-  margin-left: 1.5rem;
+  margin-right: 1.5rem;
 }
 
 .main-navigation__items ul {
@@ -24,22 +25,31 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  align-items: center;
 }
 
 .main-navigation__items li {
   margin: 0 1rem;
 }
 
-.main-navigation__items a {
+.main-navigation__items a,
+.main-navigation__items button {
+  margin: 0;
   text-decoration: none;
   color: #000;
+  border: none;
+  font: inherit;
+  background: transparent;
+  cursor: pointer;
 }
 
-.main-navigation__items a:hover {
+.main-navigation__items a:hover,
+.main-navigation__items button:hover {
   color: #b8b8b8;
 }
 
 .main-navigation__items a:active,
-.main-navigation__items a.active {
+.main-navigation__items a.active,
+.main-navigation__items button:active {
   color: #fff;
 }

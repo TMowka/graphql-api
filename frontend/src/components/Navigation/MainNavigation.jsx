@@ -5,7 +5,7 @@ import './MainNavigation.css';
 
 const mainNavigation = () => (
   <AuthContext.Consumer>
-    {({ token }) => (
+    {({ token, logout }) => (
       <header className="main-navigation">
         <div className="main-navigation__logo">
           <h1>Easy Event</h1>
@@ -21,9 +21,14 @@ const mainNavigation = () => (
               <NavLink to="/events">Events</NavLink>
             </li>
             {token && (
-              <li>
-                <NavLink to="/bookings">Bookings</NavLink>
-              </li>
+              <>
+                <li>
+                  <NavLink to="/bookings">Bookings</NavLink>
+                </li>
+                <li>
+                  <button onClick={logout}>Logout</button>
+                </li>
+              </>
             )}
           </ul>
         </nav>
