@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import AuthContext from '../context/authContext';
 import './AuthPage.css';
 
 class AuthPage extends Component {
@@ -8,6 +9,8 @@ class AuthPage extends Component {
   state = {
     isLogin: true,
   };
+
+  static contextType = AuthContext;
 
   handleSubmit = async (event) => {
     event.preventDefault();
@@ -59,8 +62,15 @@ class AuthPage extends Component {
         throw new Error('Failed');
       }
 
-      const responseData = await response.json();
-      console.log(responseData);
+      const { data: { login: { token, userId, tokenExpiration }} } = await response.json();
+
+      if (token) {
+        this.context.login(
+          token,
+          userId,
+          tokenExpiration,
+        );
+      }
     } catch (error) {
       console.error(error);
     }
