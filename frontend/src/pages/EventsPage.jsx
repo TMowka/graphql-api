@@ -4,6 +4,8 @@ import './EventsPage.css';
 
 import Modal from '../components/Modal/Modal';
 import Backdrop from '../components/Backdrop/Backdrop';
+import EventList from '../components/Events/EventList/EventList';
+import Spinner from '../components/Spinner/Spinner';
 
 class EventsPage extends Component {
   titleEl = React.createRef();
@@ -14,6 +16,8 @@ class EventsPage extends Component {
   state = {
     isCreateOpen: false,
     events: [],
+    isLoading: false,
+    openedEvent: null,
   };
 
   static contextType = AuthContext;
@@ -23,6 +27,10 @@ class EventsPage extends Component {
   }
 
   async fetchEvents() {
+    this.setState({
+      isLoading: true,
+    });
+
     const requestBody = {
       query: `
           query {
@@ -34,7 +42,6 @@ class EventsPage extends Component {
               date
               creator {
                 _id
-                email
               }
             }
           }
@@ -58,28 +65,31 @@ class EventsPage extends Component {
 
       this.setState({
         events,
+        isLoading: false,
       });
     } catch (error) {
       console.error(error);
+      this.setState({
+        isLoading: false,
+      });
     }
   }
 
-  handleCreateModalOpen = () => {
+  handleModalOpen = () => {
     this.setState({
       isCreateOpen: true,
     });
   };
 
-  handleCreateModalClose = () => {
+  handleModalClose = () => {
     this.setState({
       isCreateOpen: false,
+      openedEvent: null,
     });
   };
 
   handleCreateModalConfirm = async () => {
-    this.setState({
-      isCreateOpen: false,
-    });
+    const { events } = this.state;
 
     const title = this.titleEl.current.value;
     const price = parseFloat(this.priceEl.current.value, 10);
@@ -95,6 +105,13 @@ class EventsPage extends Component {
           mutation {
             createEvent(eventInput: { title: "${title}", description: "${description}", price: ${price}, date: "${date}" }) {
               _id
+              title
+              description
+              price
+              date
+              creator {
+                _id
+              }
             }
           }
         `,
@@ -114,14 +131,36 @@ class EventsPage extends Component {
         throw new Error('Failed');
       }
 
-      await this.fetchEvents();
+      const { data: { createEvent } } = await response.json();
+
+      this.setState({
+        isCreateOpen: false,
+        events: [
+          ...events,
+          createEvent,
+        ],
+      });
     } catch (error) {
       console.error(error);
     }
   };
 
+  handleViewDetailsOpen = (eventId) => {
+    const { events } = this.state;
+    const openedEvent = events.find(e => e._id === eventId);
+
+    this.setState({
+      openedEvent,
+    });
+  };
+
+  handleViewDetailsModalBook = () => {
+  };
+
   render() {
-    const { isCreateOpen, events } = this.state;
+    const {
+      isCreateOpen, events, isLoading, openedEvent,
+    } = this.state;
 
     return (
       <>
@@ -132,7 +171,7 @@ class EventsPage extends Component {
               title="Add Event"
               isCancelable
               isConfirmable
-              onCancel={this.handleCreateModalClose}
+              onCancel={this.handleModalClose}
               onConfirm={this.handleCreateModalConfirm}
             >
               <form>
@@ -156,17 +195,38 @@ class EventsPage extends Component {
             </Modal>
           </>
         )}
+        {openedEvent && (
+          <>
+            <Backdrop />
+            <Modal
+              title={openedEvent.title}
+              isCancelable
+              isConfirmable
+              onCancel={this.handleModalClose}
+              onConfirm={this.handleViewDetailsModalBook}
+              confirmText="Book"
+            >
+              <h1>{openedEvent.title}</h1>
+              <h2>${openedEvent.price} - {new Date(openedEvent.date).toLocaleDateString()}</h2>
+              <p>{openedEvent.description}</p>
+            </Modal>
+          </>
+        )}
         {this.context.token && (
           <div className="events-control">
             <p>Share your own Events!</p>
-            <button className="btn" onClick={this.handleCreateModalOpen}>Create Event</button>
+            <button className="btn" onClick={this.handleModalOpen}>Create Event</button>
           </div>
         )}
-        <ul className="events__list">
-          {events.map(({ _id, title }) => (
-            <li key={_id} className="events__list-item">{title}</li>
-          ))}
-        </ul>
+        {isLoading
+          ? <Spinner />
+          : (
+            <EventList
+              events={events}
+              authUserId={this.context.userId}
+              onViewDetails={this.handleViewDetailsOpen}
+            />
+          )}
       </>
     );
   }

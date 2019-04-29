@@ -2,7 +2,7 @@ import React from 'react';
 import './Modal.css';
 
 const modal = ({
-  title, children, isConfirmable, isCancelable, onCancel, onConfirm,
+  title, children, isConfirmable, confirmText = 'Confirm', isCancelable, onCancel, onConfirm,
 }) => (
     <div className="modal">
       <header className="modal__header">
@@ -13,7 +13,7 @@ const modal = ({
       </section>
       <section className="modal__actions">
         {isCancelable && <button className="btn" onClick={onCancel}>Cancel</button>}
-        {isConfirmable && <button className="btn" onClick={onConfirm}>Confirm</button>}
+        {isConfirmable && <button className="btn" onClick={onConfirm}>{confirmText}</button>}
       </section>
     </div>
   );
