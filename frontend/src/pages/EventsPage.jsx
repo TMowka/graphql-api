@@ -20,10 +20,16 @@ class EventsPage extends Component {
     openedEvent: null,
   };
 
+  isActive = true;
+
   static contextType = AuthContext;
 
   async componentDidMount() {
     await this.fetchEvents();
+  }
+
+  componentWillUnmount() {
+    this.isActive = false;
   }
 
   async fetchEvents() {
@@ -63,15 +69,20 @@ class EventsPage extends Component {
 
       const { data: { events } } = await response.json();
 
-      this.setState({
-        events,
-        isLoading: false,
-      });
+      if (this.isActive) {
+        this.setState({
+          events,
+          isLoading: false,
+        });
+      }
     } catch (error) {
       console.error(error);
-      this.setState({
-        isLoading: false,
-      });
+
+      if (this.isActive) {
+        this.setState({
+          isLoading: false,
+        });
+      }
     }
   }
 
@@ -154,7 +165,51 @@ class EventsPage extends Component {
     });
   };
 
-  handleViewDetailsModalBook = () => {
+  handleViewDetailsModalBook = async () => {
+    if (!this.context.token) {
+      this.setState({
+        openedEvent: null,
+      });
+
+      return;
+    }
+
+    const { openedEvent } = this.state;
+
+    const requestBody = {
+      query: `
+          mutation {
+            bookEvent(eventId: "${openedEvent._id}") {
+              _id
+              createdAt
+              updatedAt
+            }
+          }
+        `,
+    };
+
+    try {
+      const response = await fetch('http://localhost:5000/graphql', {
+        method: 'POST',
+        body: JSON.stringify(requestBody),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.context.token}`,
+        },
+      });
+
+      if (response.status !== 200 && response.status !== 201) {
+        throw new Error('Failed');
+      }
+
+      const { data: { bookEvent } } = await response.json();
+
+      this.setState({
+        openedEvent: null,
+      });
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   render() {
@@ -204,7 +259,7 @@ class EventsPage extends Component {
               isConfirmable
               onCancel={this.handleModalClose}
               onConfirm={this.handleViewDetailsModalBook}
-              confirmText="Book"
+              confirmText={this.context.token ? 'Book' : 'Confirm'}
             >
               <h1>{openedEvent.title}</h1>
               <h2>${openedEvent.price} - {new Date(openedEvent.date).toLocaleDateString()}</h2>
