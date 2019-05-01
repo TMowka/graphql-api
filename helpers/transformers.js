@@ -1,30 +1,25 @@
+const DataLoader = require('dataloader');
 const { dateToString } = require('./date');
 
 const User = require('../models/user');
 const Event = require('../models/event');
 
-const getEvents = async (eventIds) => {
-  const events = await Event.find({ _id: { $id: eventIds } });
+const eventLoader = new DataLoader(async (eventIds) => {
+  const events = await Event.find({ _id: { $in: eventIds } });
 
   return events.map(transformEvent); // eslint-disable-line no-use-before-define
-};
+});
 
-const getEvent = async (eventId) => {
-  const event = await Event.findById(eventId);
+const userLoader = new DataLoader(async (userIds) => {
+  const users = await User.find({ _id: { $in: userIds } });
 
-  return transformEvent(event); // eslint-disable-line no-use-before-define
-};
-
-const getUser = async (userId) => {
-  const user = await User.findById(userId);
-
-  return transformUser(user); // eslint-disable-line no-use-before-define
-};
+  return users.map(transformUser); // eslint-disable-line no-use-before-define
+});
 
 const transformEvent = ({ _doc, _doc: { date, creator } }) => ({
   ..._doc,
   date: dateToString(date),
-  creator: getUser.bind(this, creator),
+  creator: () => userLoader.load(creator.id.toString()),
 });
 
 const transformBooking = ({
@@ -34,8 +29,8 @@ const transformBooking = ({
   },
 }) => ({
   ..._doc,
-  user: getUser.bind(this, user),
-  event: getEvent.bind(this, event),
+  user: () => userLoader.load(user.id.toString()),
+  event: () => eventLoader.load(event.id.toString()),
   createdAt: dateToString(createdAt),
   updatedAt: dateToString(updatedAt),
 });
@@ -43,7 +38,7 @@ const transformBooking = ({
 const transformUser = ({ _doc, _doc: { createdEvents } }) => ({
   ..._doc,
   password: null,
-  createdEvents: getEvents.bind(this, createdEvents),
+  createdEvents: () => eventLoader.loadMany(createdEvents),
 });
 
 module.exports.transformUser = transformUser;
