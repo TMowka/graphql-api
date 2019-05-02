@@ -113,8 +113,8 @@ class EventsPage extends Component {
 
     const requestBody = {
       query: `
-          mutation {
-            createEvent(eventInput: { title: "${title}", description: "${description}", price: ${price}, date: "${date}" }) {
+          mutation createEvent($title: String!, $description: String!, price: Float!, date: String!) {
+            createEvent(eventInput: { title: $title, description: $description, price: $price, date: $date }) {
               _id
               title
               description
@@ -126,6 +126,12 @@ class EventsPage extends Component {
             }
           }
         `,
+      variables: {
+        title,
+        description,
+        price,
+        date,
+      },
     };
 
     try {
@@ -178,14 +184,17 @@ class EventsPage extends Component {
 
     const requestBody = {
       query: `
-          mutation {
-            bookEvent(eventId: "${openedEvent._id}") {
+          mutation bookEvent($eventId: ID!) {
+            bookEvent(eventId: $eventId) {
               _id
               createdAt
               updatedAt
             }
           }
         `,
+      variables: {
+        eventId: openedEvent._id,
+      }
     };
 
     try {
@@ -201,8 +210,6 @@ class EventsPage extends Component {
       if (response.status !== 200 && response.status !== 201) {
         throw new Error('Failed');
       }
-
-      const { data: { bookEvent } } = await response.json();
 
       this.setState({
         openedEvent: null,
