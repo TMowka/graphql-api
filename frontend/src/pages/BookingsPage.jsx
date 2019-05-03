@@ -3,11 +3,14 @@ import React, { Component } from 'react';
 import AuthContext from '../context/authContext';
 import Spinner from '../components/Spinner/Spinner';
 import BookingList from '../components/Bookings/BookingList/BookingList';
+import BookingsChart from '../components/Bookings/BookingsChart/BookingsChart';
+import BookingsControls from '../components/Bookings/BookingsControls/BookingsControls';
 
 class BookingPage extends Component {
   state = {
     isLoading: false,
     bookings: [],
+    outputType: 'list',
   };
 
   static contextType = AuthContext;
@@ -32,6 +35,7 @@ class BookingPage extends Component {
                 _id
                 title
                 date
+                price
               }
             }
           }
@@ -106,16 +110,43 @@ class BookingPage extends Component {
     }
   };
 
-  render() {
-    const { bookings, isLoading } = this.state;
+  handleChangeOutputType = (outputType) => {
+    if (outputType === 'chart') {
+      this.setState({
+        outputType,
+      });
+    } else {
+      this.setState({
+        outputType: 'list',
+      });
+    }
+  };
 
-    return (
-      <>
-        {isLoading
-          ? <Spinner />
-          : <BookingList bookings={bookings} onCancel={this.handleCancelBooking} />}
-      </>
-    );
+  render() {
+    const { bookings, isLoading, outputType } = this.state;
+
+    let content = <Spinner />;
+
+    if (!isLoading) {
+      content = (
+        <>
+          <BookingsControls activeOutputType={outputType} onChange={this.handleChangeOutputType} />
+          <div>
+            {outputType === 'chart'
+              ? <BookingsChart bookings={bookings} />
+              : (
+                <BookingList
+                  bookings={bookings}
+                  onCancel={this.handleCancelBooking}
+                />
+              )
+            }
+          </div>
+        </>
+      );
+    }
+
+    return content;
   }
 }
 

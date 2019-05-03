@@ -21,7 +21,7 @@ module.exports = {
     const newEvent = new Event({
       title,
       description,
-      price: parseFloat(price, 10),
+      price: parseFloat(price, 10) || 0,
       date: new Date(date),
       creator: req.userId,
     });

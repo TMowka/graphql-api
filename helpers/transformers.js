@@ -19,7 +19,7 @@ const userLoader = new DataLoader(async (userIds) => {
 const transformEvent = ({ _doc, _doc: { date, creator } }) => ({
   ..._doc,
   date: dateToString(date),
-  creator: () => userLoader.load(creator.id.toString()),
+  creator: () => userLoader.load(creator),
 });
 
 const transformBooking = ({
@@ -29,8 +29,8 @@ const transformBooking = ({
   },
 }) => ({
   ..._doc,
-  user: () => userLoader.load(user.id.toString()),
-  event: () => eventLoader.load(event.id.toString()),
+  user: () => userLoader.load(user),
+  event: () => eventLoader.load(event),
   createdAt: dateToString(createdAt),
   updatedAt: dateToString(updatedAt),
 });
