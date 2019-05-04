@@ -7,7 +7,9 @@ const Event = require('../models/event');
 const eventLoader = new DataLoader(async (eventIds) => {
   const events = await Event.find({ _id: { $in: eventIds } });
 
-  return events.map(transformEvent); // eslint-disable-line no-use-before-define
+  return events
+    .sort((a, b) => eventIds.indexOf(a._id.toString()) - eventIds.indexOf(b._id.toString())) // eslint-disable-line no-underscore-dangle, max-len
+    .map(transformEvent); // eslint-disable-line no-use-before-define
 });
 
 const userLoader = new DataLoader(async (userIds) => {
